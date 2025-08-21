@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventário Colaborativo</title>
+    <!-- Tailwind CSS para um design responsivo e moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .tab-button.active {
+            background-color: #ffffff;
+            color: #1f2937;
+            border-bottom: 2px solid #3b82f6;
+        }
+        input, select, button {
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-start justify-center min-h-screen p-4">
+
+    <div class="container bg-white p-6 rounded-xl shadow-lg mt-8 w-full">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Sistema de Inventário</h1>
+
+        <!-- Seções de Navegação (Abas) -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button id="tab-contagem" class="tab-button active flex-1 py-3 px-4 text-sm font-medium text-center text-gray-600 hover:bg-gray-50 focus:outline-none rounded-t-lg">
+                <span class="block">1. Contagem de Produtos</span>
+            </button>
+            <button id="tab-importar" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-center text-gray-600 hover:bg-gray-50 focus:outline-none rounded-t-lg">
+                <span class="block">2. Importar Arquivos</span>
+            </button>
+            <button id="tab-consolidado" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-center text-gray-600 hover:bg-gray-50 focus:outline-none rounded-t-lg">
+                <span class="block">3. Inventário Consolidado</span>
+            </button>
+        </div>
+
+        <!-- Conteúdo das Seções -->
+        <div id="contagem-section" class="tab-content">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Registro da Contagem</h2>
+            <form id="contagem-form" class="space-y-4">
+                <div>
+                    <label for="codigo" class="block text-sm font-medium text-gray-700">Código do Produto</label>
+                    <input type="text" id="codigo" name="codigo" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="localizacao" class="block text-sm font-medium text-gray-700">Localização (Ex: Corredor A, Prateleira 2)</label>
+                    <input type="text" id="localizacao" name="localizacao" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade Contada</label>
+                    <input type="number" id="quantidade" name="quantidade" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div class="flex space-x-2">
+                    <button type="submit"
+                            class="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Salvar Contagem
+                    </button>
+                </div>
+            </form>
+            <hr class="my-6 border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-700">Minhas Contagens</h3>
+                <button id="exportar-contagem"
+                        class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Exportar Minha Contagem (.xlsx)
+                </button>
+            </div>
+            <div class="bg-white rounded-md shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localização</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contagens-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Linhas de contagem serão inseridas aqui via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="importar-section" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Importar Arquivos de Contagem</h2>
+            <div class="mb-4">
+                <label for="import-files" class="block text-sm font-medium text-gray-700">Selecione os arquivos de contagem (.xlsx)</label>
+                <input type="file" id="import-files" multiple accept=".xlsx"
+                       class="mt-1 block w-full text-gray-700 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <button id="importar-btn"
+                    class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Importar e Consolidar
+            </button>
+            <div id="import-status" class="mt-4 text-sm text-gray-600"></div>
+        </div>
+
+        <div id="consolidado-section" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Inventário Consolidado</h2>
+            <div class="flex justify-between items-center mb-4">
+                <button id="exportar-consolidado"
+                        class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Exportar Inventário Completo (.xlsx)
+                </button>
+                <button id="limpar-dados"
+                        class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Limpar Todos os Dados
+                </button>
+            </div>
+            <div class="bg-white rounded-md shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localização</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consolidado-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Linhas consolidadas serão inseridas aqui via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-80">
+            <h3 class="text-lg font-bold">Confirmação</h3>
+            <p id="modal-text" class="mt-2 mb-4 text-sm text-gray-600">Deseja realmente limpar todos os dados do inventário? Esta ação é irreversível.</p>
+            <div class="flex justify-end space-x-2">
+                <button id="modal-cancel-btn" class="py-2 px-4 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancelar</button>
+                <button id="modal-confirm-btn" class="py-2 px-4 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biblioteca para manipulação de arquivos XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Variáveis Globais ---
+            let db;
+            const DB_NAME = 'inventarioDB';
+            const DB_VERSION = 1;
+            const STORE_CONTATO = 'contagens';
+            const STORE_CONSOLIDADO = 'inventarioConsolidado';
+
+            // --- Lógica de IndexedDB ---
+            const initDb = () => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error('Erro ao abrir o banco de dados:', event.target.errorCode);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_CONTATO)) {
+                        db.createObjectStore(STORE_CONTATO, { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_CONSOLIDADO)) {
+                        db.createObjectStore(STORE_CONSOLIDADO, { keyPath: 'codigo' });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('Banco de dados aberto com sucesso!');
+                    loadContagensTable();
+                    loadConsolidadoTable();
+                };
+            };
+
+            const addContagem = (data) => {
+                const transaction = db.transaction([STORE_CONTATO], 'readwrite');
+                const store = transaction.objectStore(STORE_CONTATO);
+                const request = store.add(data);
+
+                request.onsuccess = () => {
+                    console.log('Contagem salva com sucesso!');
+                    loadContagensTable();
+                };
+                request.onerror = (event) => {
+                    console.error('Erro ao salvar contagem:', event.target.error);
+                };
+            };
+
+            const deleteContagem = (id) => {
+                const transaction = db.transaction([STORE_CONTATO], 'readwrite');
+                const store = transaction.objectStore(STORE_CONTATO);
+                const request = store.delete(id);
+                request.onsuccess = () => {
+                    console.log('Contagem deletada:', id);
+                    loadContagensTable();
+                };
+                request.onerror = (event) => {
+                    console.error('Erro ao deletar contagem:', event.target.error);
+                };
+            };
+
+            const addOrUpdateConsolidado = (data) => {
+                const transaction = db.transaction([STORE_CONSOLIDADO], 'readwrite');
+                const store = transaction.objectStore(STORE_CONSOLIDADO);
+
+                const getRequest = store.get(data.codigo);
+
+                getRequest.onsuccess = (event) => {
+                    const existingItem = event.target.result;
+                    if (existingItem) {
+                        // Se o produto já existe, atualiza a quantidade
+                        const newQuantity = parseInt(existingItem.quantidade, 10) + parseInt(data.quantidade, 10);
+                        existingItem.quantidade = newQuantity;
+                        store.put(existingItem);
+                    } else {
+                        // Se não existe, adiciona um novo item
+                        store.add(data);
+                    }
+                };
+
+                getRequest.onerror = (event) => {
+                    console.error('Erro ao buscar item consolidado:', event.target.error);
+                };
+            };
+
+            const clearDatabase = () => {
+                const transaction = db.transaction([STORE_CONTATO, STORE_CONSOLIDADO], 'readwrite');
+                const contagemStore = transaction.objectStore(STORE_CONTATO);
+                const consolidadoStore = transaction.objectStore(STORE_CONSOLIDADO);
+                
+                contagemStore.clear();
+                consolidadoStore.clear();
+
+                transaction.oncomplete = () => {
+                    console.log('Banco de dados limpo com sucesso.');
+                    loadContagensTable();
+                    loadConsolidadoTable();
+                };
+                transaction.onerror = (event) => {
+                    console.error('Erro ao limpar o banco de dados:', event.target.error);
+                };
+            };
+
+            // --- Lógica de Interface (UI) e Eventos ---
+            
+            // Gerenciamento de abas
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    document.getElementById(tab.id.replace('tab-', '') + '-section').classList.remove('hidden');
+                });
+            });
+
+            // Formulário de Contagem
+            document.getElementById('contagem-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const codigo = document.getElementById('codigo').value.toUpperCase().trim();
+                const localizacao = document.getElementById('localizacao').value.trim();
+                const quantidade = parseInt(document.getElementById('quantidade').value, 10);
+
+                if (codigo && localizacao && !isNaN(quantidade)) {
+                    addContagem({ codigo, localizacao, quantidade });
+                    e.target.reset();
+                }
+            });
+
+            // Carregar tabela de contagens do usuário
+            const loadContagensTable = () => {
+                const transaction = db.transaction([STORE_CONTATO], 'readonly');
+                const store = transaction.objectStore(STORE_CONTATO);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const contagens = request.result;
+                    const tableBody = document.getElementById('contagens-table-body');
+                    tableBody.innerHTML = '';
+                    if (contagens.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhuma contagem registrada.</td></tr>';
+                    } else {
+                        contagens.forEach(item => {
+                            const row = `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.codigo}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.localizacao}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.quantidade}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${item.id}">Excluir</button>
+                                    </td>
+                                </tr>
+                            `;
+                            tableBody.innerHTML += row;
+                        });
+                        document.querySelectorAll('.delete-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = parseInt(e.target.dataset.id, 10);
+                                deleteContagem(id);
+                            });
+                        });
+                    }
+                };
+            };
+
+            // Carregar tabela de inventário consolidado
+            const loadConsolidadoTable = () => {
+                const transaction = db.transaction([STORE_CONSOLIDADO], 'readonly');
+                const store = transaction.objectStore(STORE_CONSOLIDADO);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const consolidado = request.result;
+                    const tableBody = document.getElementById('consolidado-table-body');
+                    tableBody.innerHTML = '';
+                    if (consolidado.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhum dado consolidado.</td></tr>';
+                    } else {
+                        consolidado.forEach(item => {
+                            const row = `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.codigo}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.localizacao}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.quantidade}</td>
+                                </tr>
+                            `;
+                            tableBody.innerHTML += row;
+                        });
+                    }
+                };
+            };
+
+            // Lógica de exportação para .xlsx
+            const exportData = (data, filename) => {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Contagem");
+                XLSX.writeFile(wb, filename);
+            };
+
+            document.getElementById('exportar-contagem').addEventListener('click', () => {
+                const transaction = db.transaction([STORE_CONTATO], 'readonly');
+                const store = transaction.objectStore(STORE_CONTATO);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const contagens = request.result.map(({ id, ...rest }) => rest); // Remove o ID para a exportação
+                    if (contagens.length > 0) {
+                        const filename = `contagem_${Date.now()}.xlsx`;
+                        exportData(contagens, filename);
+                    } else {
+                        alert('Nenhuma contagem para exportar!');
+                    }
+                };
+            });
+
+            document.getElementById('exportar-consolidado').addEventListener('click', () => {
+                const transaction = db.transaction([STORE_CONSOLIDADO], 'readonly');
+                const store = transaction.objectStore(STORE_CONSOLIDADO);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const consolidado = request.result;
+                    if (consolidado.length > 0) {
+                        const filename = `inventario_consolidado_${Date.now()}.xlsx`;
+                        exportData(consolidado, filename);
+                    } else {
+                        alert('Nenhum inventário consolidado para exportar!');
+                    }
+                };
+            });
+
+            // Lógica de importação (CORRIGIDA)
+            document.getElementById('importar-btn').addEventListener('click', async () => {
+                const files = document.getElementById('import-files').files;
+                if (files.length === 0) {
+                    document.getElementById('import-status').textContent = 'Nenhum arquivo selecionado.';
+                    return;
+                }
+                
+                document.getElementById('import-status').textContent = 'Importando...';
+                document.getElementById('importar-btn').disabled = true;
+
+                let consolidatedCount = 0;
+                for (const file of files) {
+                    try {
+                        const data = await file.arrayBuffer();
+                        const workbook = XLSX.read(data);
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        for (const item of jsonData) {
+                            // AQUI ESTÁ A CORREÇÃO: Usamos os nomes das colunas 'codigo', 'localizacao' e 'quantidade'
+                            // que são os nomes corretos do arquivo exportado.
+                            if (item.codigo && item.localizacao && !isNaN(item.quantidade)) {
+                                const standardizedItem = {
+                                    codigo: String(item.codigo).toUpperCase().trim(),
+                                    localizacao: String(item.localizacao).trim(),
+                                    quantidade: parseInt(item.quantidade, 10)
+                                };
+                                addOrUpdateConsolidado(standardizedItem);
+                                consolidatedCount++;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro ao processar arquivo:', file.name, error);
+                        document.getElementById('import-status').textContent = `Erro ao processar o arquivo: ${file.name}`;
+                        return;
+                    }
+                }
+                
+                document.getElementById('import-status').textContent = `Importação concluída. ${consolidatedCount} itens processados.`;
+                loadConsolidadoTable();
+                document.getElementById('importar-btn').disabled = false;
+            });
+
+            // Lógica do Modal de Confirmação
+            const modal = document.getElementById('modal');
+            const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+            document.getElementById('limpar-dados').addEventListener('click', () => {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+
+            modalConfirmBtn.addEventListener('click', () => {
+                clearDatabase();
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+
+            modalCancelBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+
+            // Inicialização do Banco de Dados
+            initDb();
+        });
+    </script>
+</body>
+</html>
